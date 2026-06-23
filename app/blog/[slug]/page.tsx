@@ -54,7 +54,8 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <main className="min-h-screen px-6 py-24">
+    <main className="min-h-screen flex flex-col">
+      <div className="flex-1 px-6 pt-20 pb-10">
       <div className="max-w-3xl mx-auto">
         {/* Back */}
         <Link
@@ -120,7 +121,7 @@ export default function BlogDetailPage() {
         />
 
         {/* Tags footer */}
-        <div className="flex flex-wrap gap-2 mt-12 pt-8 border-t border-border">
+        <div className="flex flex-wrap gap-2 mt-6 pt-6 ">
           {post.tags.map((tag) => (
             <Link
               key={tag.id}
@@ -133,7 +134,7 @@ export default function BlogDetailPage() {
         </div>
 
         {/* Prev / Next */}
-        <div className="grid grid-cols-2 gap-4 mt-8">
+        <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-border " >
           {post.prev ? (
             <Link
               href={`/blog/${post.prev.slug}`}
@@ -162,6 +163,7 @@ export default function BlogDetailPage() {
             </Link>
           ) : <div />}
         </div>
+      </div>
       </div>
       <Footer />
     </main>

@@ -36,7 +36,9 @@ export default function BlogListPage() {
   })
 
   return (
-    <main className="min-h-screen px-6 py-24">
+   <main className="min-h-screen flex flex-col">
+    {/* <main className="min-h-screen px-6 py-24"> */}
+     <div className="flex-1 px-6 py-20">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-12">
@@ -164,7 +166,8 @@ export default function BlogListPage() {
           </>
         )}
       </div>
-       <Footer />
-    </main>
+     </div>
+    <Footer />
+   </main>
   )
 }
