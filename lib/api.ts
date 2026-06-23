@@ -13,7 +13,7 @@ export const api = axios.create({
 // ── Request interceptor — tự gắn Bearer token ─────────────────────────────
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = Cookies.get('token') || localStorage.getItem('accessToken')
+    const token = Cookies.get('accessToken') || localStorage.getItem('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -68,7 +68,7 @@ api.interceptors.response.use(
       if (!refreshToken) {
         // Không có refresh token → Xóa sạch cả localStorage lẫn Cookie và về Login
         localStorage.clear()
-        Cookies.remove('token') //  2. Xóa cookie khi không có refresh token
+        Cookies.remove('accessToken') //  2. Xóa cookie khi không có refresh token
         window.location.href = '/admin/login'
         return Promise.reject(error)
       }
@@ -83,7 +83,7 @@ api.interceptors.response.use(
         localStorage.setItem('refreshToken', data.refreshToken)
 
         //  3. QUAN TRỌNG: Cập nhật Access Token mới vào Cookie cho Middleware đọc
-        Cookies.set('token', data.accessToken, { expires: 7 })
+        Cookies.set('accessToken', data.accessToken, { expires: 7 })
 
         processQueue(null, data.accessToken)
 
@@ -94,7 +94,7 @@ api.interceptors.response.use(
         
         // Refresh thất bại (Refresh Token hết hạn hẳn) ➔ Clear sạch sành sanh
         localStorage.clear()
-        Cookies.remove('token') // 4. Xóa sạch Cookie để tránh treo Middleware
+        Cookies.remove('accessToken') // 4. Xóa sạch Cookie để tránh treo Middleware
         window.location.href = '/admin/login'
         return Promise.reject(refreshError)
       } finally {
