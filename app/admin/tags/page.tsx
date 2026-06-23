@@ -34,6 +34,9 @@ export default function AdminTagsPage() {
   const [editing, setEditing] = useState<TagDto | null>(null)
   const [deleteItem, setDeleteItem] = useState<TagDto | null>(null)
   const [name, setName] = useState('')
+  const [page, setPage] = useState(1)
+  
+  const PAGE_SIZE = 10
 
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['admin-tags'],
@@ -43,6 +46,14 @@ export default function AdminTagsPage() {
   const filtered = tags.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated   = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1) // reset về trang 1 khi search đổi
+  }
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-tags'] })
 
@@ -98,7 +109,7 @@ export default function AdminTagsPage() {
         <Input
           placeholder="Search tags..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => handleSearch(e.target.value)}
           className="pl-9"
         />
       </div>
@@ -115,21 +126,21 @@ export default function AdminTagsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+             {isLoading ? (
               [...Array(5)].map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={3}>
+                  <TableCell colSpan={4}>
                     <div className="h-8 bg-secondary rounded animate-pulse" />
                   </TableCell>
                 </TableRow>
               ))
-            ) : filtered.length === 0 ? (
+            ) : paginated.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                   No tags found.
                 </TableCell>
               </TableRow>
-            ) : filtered.map(tag => (
+            ) : paginated.map(tag => (
               <TableRow key={tag.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -143,7 +154,7 @@ export default function AdminTagsPage() {
                   <code className="text-xs bg-secondary px-2 py-1 rounded">{tag.slug}</code>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{tag.blogCount} blogs</Badge>
+                  <Badge variant="secondary">{tag.blogCount} posts</Badge>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -153,11 +164,14 @@ export default function AdminTagsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(tag)}>
+                      <DropdownMenuItem 
+                        onSelect={(e) => e.preventDefault()}
+                        onClick={() => openEdit(tag)}>
                         <Edit className="mr-2 size-4" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
+                        onSelect={(e) => e.preventDefault()}
                         onClick={() => setDeleteItem(tag)}
                       >
                         <Trash2 className="mr-2 size-4" /> Delete
@@ -170,6 +184,34 @@ export default function AdminTagsPage() {
           </TableBody>
         </Table>
       </div>
+
+       {/* Pagination */}
+      {!isLoading && filtered.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground px-2 py-1.5">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline" size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

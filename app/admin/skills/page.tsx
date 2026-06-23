@@ -178,11 +178,14 @@ export default function AdminSkillsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEdit(skill)}>
+                            <DropdownMenuItem 
+                              onSelect={(e) => e.preventDefault()}
+                              onClick={() => openEdit(skill)}>
                               <Edit className="mr-2 size-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
+                              onSelect={(e) => e.preventDefault()}
                               onClick={() => setDeleteItem(skill)}
                             >
                               <Trash2 className="mr-2 size-4" /> Delete

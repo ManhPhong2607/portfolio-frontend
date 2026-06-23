@@ -37,6 +37,8 @@ export default function AdminTechnologiesPage() {
   const [editing, setEditing] = useState<TechnologyDto | null>(null)
   const [deleteItem, setDeleteItem] = useState<TechnologyDto | null>(null)
   const [form, setForm] = useState<TechForm>(EMPTY)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
 
   const { data: technologies = [], isLoading } = useQuery({
     queryKey: ['admin-technologies'],
@@ -46,6 +48,14 @@ export default function AdminTechnologiesPage() {
   const filtered = technologies.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated   = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-technologies'] })
 
@@ -99,7 +109,7 @@ export default function AdminTechnologiesPage() {
         <Input
           placeholder="Search technologies..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => handleSearch(e.target.value)}
           className="pl-9"
         />
       </div>
@@ -123,13 +133,13 @@ export default function AdminTechnologiesPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : filtered.length === 0 ? (
+            ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
                   No technologies found.
                 </TableCell>
               </TableRow>
-            ) : filtered.map(tech => (
+            ) : paginated.map(tech => (
               <TableRow key={tech.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -150,11 +160,14 @@ export default function AdminTechnologiesPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(tech)}>
+                      <DropdownMenuItem 
+                        onSelect={(e) => e.preventDefault()}
+                        onClick={() => openEdit(tech)}>
                         <Edit className="mr-2 size-4" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
+                        onSelect={(e) => e.preventDefault()}
                         onClick={() => setDeleteItem(tech)}
                       >
                         <Trash2 className="mr-2 size-4" /> Delete
@@ -167,6 +180,34 @@ export default function AdminTechnologiesPage() {
           </TableBody>
         </Table>
       </div>
+
+       {/* Pagination */}
+      {!isLoading && filtered.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground px-2 py-1.5">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline" size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

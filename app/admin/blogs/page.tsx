@@ -258,6 +258,7 @@ export default function AdminPostsPage() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
+                        onSelect={(e) => e.preventDefault()}
                         onClick={() => setDeleteItem(post)}
                       >
                         <Trash2 className="mr-2 size-4" /> Delete

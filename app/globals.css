@@ -157,3 +157,8 @@
   background: oklch(0.75 0.12 85 / 0.3);
   color: oklch(0.92 0 0);
 }
+
+/* Bảo hiểm toàn diện: Không bao giờ cho phép trang web bị liệt chuột do lỗi Modal */
+body {
+  pointer-events: auto !important;
+}

@@ -287,6 +287,7 @@ export default function AdminProjectsPage() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
+                        onSelect={(e) => e.preventDefault()}
                         onClick={() => setDeleteItem(project)}
                       >
                         <Trash2 className="mr-2 size-4" /> Delete
