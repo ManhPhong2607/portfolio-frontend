@@ -55,7 +55,7 @@ export function ProjectEditor({ mode, project }: Props) {
     endDate:          project?.endDate   ? project.endDate.split('T')[0]   : '',
     // isFeatured:       project?.isFeatured       ?? false,
     technologyIds:    project?.technologies.map(t => t.id) ?? [] as string[],
-    thumbnailMediaId: undefined as string | undefined,
+    thumbnailMediaId: project?.thumbnailMediaId ?? undefined,
   })
 
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(
@@ -76,7 +76,7 @@ export function ProjectEditor({ mode, project }: Props) {
         endDate:          project.endDate   ? project.endDate.split('T')[0]   : '',
         // isFeatured:       project.isFeatured,
         technologyIds:    project.technologies.map(t => t.id),
-        thumbnailMediaId: undefined,
+        thumbnailMediaId: project.thumbnailMediaId ?? undefined,
       })
       setThumbnailPreview(project.thumbnailUrl ?? null)
     }

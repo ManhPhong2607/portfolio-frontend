@@ -100,6 +100,7 @@ export interface AdjacentPostDto {
 
 export interface BlogPostDetailDto extends BlogPostSummaryDto {
   content: string
+  coverMediaId: string | null
   updatedAt: string
   prev: AdjacentPostDto | null
   next: AdjacentPostDto | null
@@ -132,6 +133,7 @@ export interface ProjectSummaryDto {
 
 export interface ProjectDetailDto extends ProjectSummaryDto {
   detailContent: string | null
+  thumbnailMediaId: string | null
   createdAt: string
   updatedAt: string
 }

@@ -46,7 +46,7 @@ export function PostEditor({ mode, post }: Props) {
     excerpt: post?.excerpt ?? '',
     content: post?.content ?? '',
     tagIds: post?.tags.map(t => t.id) ?? [] as string[],
-    coverMediaId: undefined as string | undefined,
+    coverMediaId: post?.coverMediaId ?? undefined,
   })
 
   const [coverPreview, setCoverPreview] = useState<string | null>(post?.coverImageUrl ?? null)
@@ -60,7 +60,7 @@ export function PostEditor({ mode, post }: Props) {
         excerpt: post.excerpt ?? '',
         content: post.content,
         tagIds: post.tags.map(t => t.id),
-        coverMediaId: undefined,
+        coverMediaId: post.coverMediaId ?? undefined,
       })
       setCoverPreview(post.coverImageUrl ?? null)
     }
