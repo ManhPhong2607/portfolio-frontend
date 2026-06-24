@@ -1,381 +1,313 @@
-"use client"
+// // app/admin/messages/page.tsx
+'use client'
 
-import { useState } from "react"
-import { 
-  Search, 
-  MoreHorizontal, 
-  Mail, 
-  Trash2, 
-  Archive,
-  MailOpen,
-  Clock,
-  Filter,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { adminService } from '@/services/adminService'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  Search, Mail, MailOpen, Archive, ArchiveRestore,
+  Trash2, MoreHorizontal, Eye, Clock
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Separator } from "@/components/ui/separator"
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import type { ContactMessageDto } from '@/types/api'
 
-// Mock data
-const messages = [
-  {
-    id: "1",
-    senderName: "John Doe",
-    senderEmail: "john.doe@example.com",
-    subject: "Project Inquiry - E-commerce Platform",
-    body: "Hi, I saw your portfolio and I'm impressed with your work on the e-commerce platform. I'm looking for a developer to help build a similar solution for my business. Would you be interested in discussing this further?\n\nBest regards,\nJohn",
-    status: "unread",
-    sentAt: "2024-01-16T14:30:00Z",
-    readAt: null,
-  },
-  {
-    id: "2",
-    senderName: "Jane Smith",
-    senderEmail: "jane.smith@startup.io",
-    subject: "Collaboration Request",
-    body: "Hello!\n\nI'm the founder of a tech startup and we're looking for skilled developers to join our team. Your experience with ASP.NET Core and React caught my attention.\n\nWould you be open to a brief call to discuss potential collaboration opportunities?\n\nThanks,\nJane",
-    status: "unread",
-    sentAt: "2024-01-15T09:15:00Z",
-    readAt: null,
-  },
-  {
-    id: "3",
-    senderName: "Mike Johnson",
-    senderEmail: "mike.j@gmail.com",
-    subject: "Question about your blog post",
-    body: "Hey!\n\nI just read your article about Clean Architecture with ASP.NET Core. Great content! I have a question about the repository pattern implementation you mentioned.\n\nCould you elaborate on how you handle transactions across multiple repositories?\n\nThanks for sharing your knowledge!",
-    status: "read",
-    sentAt: "2024-01-14T18:45:00Z",
-    readAt: "2024-01-14T20:00:00Z",
-  },
-  {
-    id: "4",
-    senderName: "Sarah Wilson",
-    senderEmail: "sarah.wilson@agency.com",
-    subject: "Freelance Opportunity",
-    body: "Hi there,\n\nWe're a digital agency looking for freelance developers for upcoming projects. Based on your portfolio, you seem like a great fit.\n\nOur current project involves building a dashboard application with React and TypeScript.\n\nInterested in learning more?\n\nBest,\nSarah",
-    status: "read",
-    sentAt: "2024-01-12T11:20:00Z",
-    readAt: "2024-01-12T14:30:00Z",
-  },
-  {
-    id: "5",
-    senderName: "Alex Chen",
-    senderEmail: "alex.chen@university.edu",
-    subject: "Speaking at Tech Conference",
-    body: "Dear Developer,\n\nI'm organizing a tech conference at our university and would love to invite you as a speaker. Your expertise in modern web development would be valuable for our students.\n\nThe event is scheduled for next month. Would you be interested?\n\nRegards,\nAlex Chen\nStudent Tech Club President",
-    status: "archived",
-    sentAt: "2024-01-08T16:00:00Z",
-    readAt: "2024-01-09T10:00:00Z",
-  },
-]
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'Unread') return <Badge className="bg-yellow-600/20 text-yellow-500 hover:bg-yellow-600/30 border-none">Unread</Badge>
+  if (status === 'Read') return <Badge variant="secondary">Read</Badge>
+  return <Badge variant="outline">Archived</Badge>
+}
 
-export default function MessagesPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [selectedMessage, setSelectedMessage] = useState<typeof messages[0] | null>(null)
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+const PAGE_SIZE = 20
 
-  const filteredMessages = messages.filter((message) => {
-    const matchesSearch = 
-      message.senderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.senderEmail.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || message.status === statusFilter
-    return matchesSearch && matchesStatus
+export default function AdminMessagesPage() {
+  const qc = useQueryClient()
+
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  const [viewing, setViewing] = useState<ContactMessageDto | null>(null)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-messages', { page, status }],
+    queryFn: () => adminService.getMessages({
+      page, limit: PAGE_SIZE, status: status === 'all' ? undefined : status,
+    }),
   })
 
-  const unreadCount = messages.filter(m => m.status === "unread").length
+  const filtered = (data?.items ?? []).filter(m =>{
+    // 1. Lọc theo từ khóa tìm kiếm trước
+    const matchesSearch = 
+      m.senderName.toLowerCase().includes(search.toLowerCase()) ||
+      m.senderEmail.toLowerCase().includes(search.toLowerCase());
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) {
-      return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    } else if (diffDays === 1) {
-      return "Yesterday"
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString("en-US", { weekday: "short" })
+    // 2. Lọc theo trạng thái
+    if (status === 'all') {
+      // Nếu là "All", chỉ lấy Unread và Read (Ẩn Archived đi)
+      return matchesSearch && m.status !== 'Archived';
+    } else {
+      // Nếu chọn đích danh Unread, Read, hoặc Archived thì khớp chính xác
+      return matchesSearch && m.status === status;
     }
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  }
+  });
 
-  const handleViewMessage = (message: typeof messages[0]) => {
-    setSelectedMessage(message)
-    setDetailsDialogOpen(true)
-    // TODO: Mark as read via API
-  }
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-messages'] })
 
-  const handleDelete = (message: typeof messages[0]) => {
-    setSelectedMessage(message)
-    setDeleteDialogOpen(true)
-  }
+  const markReadMut = useMutation({
+    mutationFn: adminService.markMessageRead,
+    onSuccess: () => {
+      invalidate()
+      // Cập nhật luôn state viewing nếu modal đang mở để UI đổi ngay sang Read
+      if (viewing && viewing.status === 'Unread') {
+        setViewing({ ...viewing, status: 'Read' })
+      }
+    },
+    onError: () => toast.error('Có lỗi xảy ra.'),
+  })
 
-  const confirmDelete = () => {
-    console.log("Deleting message:", selectedMessage?.id)
-    setDeleteDialogOpen(false)
-    setSelectedMessage(null)
-  }
+  const archiveMut = useMutation({
+    mutationFn: adminService.archiveMessage,
+    onSuccess: () => {
+      invalidate()
+      toast.success('Archived.')
+      if (viewing) setViewing({ ...viewing, status: 'Archived' })
+    },
+    onError: () => toast.error('Có lỗi xảy ra.'),
+  })
 
-  const handleMarkAsRead = (message: typeof messages[0]) => {
-    console.log("Marking as read:", message.id)
-  }
+  const unarchiveMut = useMutation({
+    mutationFn: adminService.unarchiveMessage,
+    onSuccess: () => {
+      invalidate()
+      toast.success('Unarchived.')
+      if (viewing) setViewing({ ...viewing, status: 'Read' })
+    },
+    onError: () => toast.error('Có lỗi xảy ra.'),
+  })
 
-  const handleArchive = (message: typeof messages[0]) => {
-    console.log("Archiving message:", message.id)
-  }
+  const deleteMut = useMutation({
+    mutationFn: adminService.deleteMessage,
+    onSuccess: () => {
+      invalidate()
+      toast.success('Deleted.')
+      setViewing(null)
+    },
+  })
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "unread":
-        return <Badge className="bg-accent/10 text-accent">Unread</Badge>
-      case "read":
-        return <Badge variant="secondary">Read</Badge>
-      case "archived":
-        return <Badge variant="outline">Archived</Badge>
-      default:
-        return null
-    }
+  const openMessage = (msg: ContactMessageDto) => {
+    setViewing(msg)
+    if (msg.status === 'Unread') markReadMut.mutate(msg.id)
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
-          <p className="text-muted-foreground">
-            {unreadCount > 0 
-              ? `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}`
-              : "All caught up! No unread messages."
-            }
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
+        <p className="text-muted-foreground">You have {filtered.filter(m => m.status === 'Unread').length} unread messages</p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search messages..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[150px]">
-            <Filter className="mr-2 size-4" />
-            <SelectValue placeholder="Filter" />
+        <Select value={status} onValueChange={v => { setStatus(v); setPage(1) }}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Messages</SelectItem>
-            <SelectItem value="unread">Unread</SelectItem>
-            <SelectItem value="read">Read</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value="Unread">Unread</SelectItem>
+            <SelectItem value="Read">Read</SelectItem>
+            <SelectItem value="Archived">Archived</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Messages Table */}
       <div className="rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">From</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead className="w-[100px]">Date</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
+              <TableHead className="w-[40px]" />
+              <TableHead>From</TableHead>
+              <TableHead className="w-[40%]">Subject</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="w-[70px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMessages.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No messages found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredMessages.map((message) => (
-                <TableRow 
-                  key={message.id}
-                  className={message.status === "unread" ? "bg-accent/5" : ""}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      {message.status === "unread" && (
-                        <span className="size-2 rounded-full bg-accent flex-shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className={`truncate ${message.status === "unread" ? "font-semibold" : "font-medium"}`}>
-                          {message.senderName}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {message.senderEmail}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <button 
-                      onClick={() => handleViewMessage(message)}
-                      className={`text-left hover:underline truncate block max-w-md ${
-                        message.status === "unread" ? "font-semibold" : ""
-                      }`}
-                    >
-                      {message.subject}
-                    </button>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(message.status)}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(message.sentAt)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8">
-                          <MoreHorizontal className="size-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewMessage(message)}>
-                          <Mail className="mr-2 size-4" />
-                          View Message
-                        </DropdownMenuItem>
-                        {message.status === "unread" && (
-                          <DropdownMenuItem onClick={() => handleMarkAsRead(message)}>
-                            <MailOpen className="mr-2 size-4" />
-                            Mark as Read
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => handleArchive(message)}>
-                          <Archive className="mr-2 size-4" />
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => handleDelete(message)}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+            {isLoading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={6}><div className="h-8 bg-secondary rounded animate-pulse" /></TableCell>
                 </TableRow>
               ))
-            )}
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  No messages yet.
+                </TableCell>
+              </TableRow>
+            ) : filtered.map(msg => (
+              <TableRow key={msg.id}>
+                <TableCell>
+                  {msg.status === 'Unread'
+                    ? <Mail className="size-4 text-yellow-500" />
+                    : <MailOpen className="size-4 text-muted-foreground" />}
+                </TableCell>
+                <TableCell>
+                  <div className={msg.status === 'Unread' ? 'font-medium' : ''}>{msg.senderName}</div>
+                  <div className="text-xs text-muted-foreground">{msg.senderEmail}</div>
+                </TableCell>
+                {/* Đã thêm sự kiện onClick và style hover cho Subject */}
+                <TableCell
+                  className={`truncate max-w-md cursor-pointer hover:underline transition-colors ${msg.status === 'Unread'
+                      ? 'font-semibold text-foreground'
+                      : 'font-medium text-foreground/90'
+                    }`}
+                  // className={`truncate max-w-md cursor-pointer hover:underline hover:text-foreground transition-colors ${msg.status === 'Unread' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => openMessage(msg)}
+                  title="Click to view message"
+                >
+                  {msg.subject || '(No subject)'}
+                </TableCell>
+                <TableCell><StatusBadge status={msg.status} /></TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {new Date(msg.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="size-8">
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openMessage(msg)}>
+                        <Eye className="mr-2 size-4" /> View Message
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+
+                      {msg.status === 'Unread' && (
+                        <DropdownMenuItem onClick={() => markReadMut.mutate(msg.id)}>
+                          <MailOpen className="mr-2 size-4" /> Mark as Read
+                        </DropdownMenuItem>
+                      )}
+
+                      {msg.status !== 'Archived' && (
+                        <DropdownMenuItem onClick={() => archiveMut.mutate(msg.id)}>
+                          <Archive className="mr-2 size-4" /> Archive
+                        </DropdownMenuItem>
+                      )}
+
+                      {msg.status === 'Archived' && (
+                        <DropdownMenuItem onClick={() => unarchiveMut.mutate(msg.id)}>
+                          <ArchiveRestore className="mr-2 size-4" /> Unarchive
+                        </DropdownMenuItem>
+                      )}
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => deleteMut.mutate(msg.id)}
+                      >
+                        <Trash2 className="mr-2 size-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Message Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+      <Dialog open={!!viewing} onOpenChange={() => setViewing(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedMessage?.subject}</DialogTitle>
-            <DialogDescription>
-              From {selectedMessage?.senderName} ({selectedMessage?.senderEmail})
-            </DialogDescription>
+            <DialogTitle className="text-xl pb-2">{viewing?.subject || 'Message'}</DialogTitle>
           </DialogHeader>
-          {selectedMessage && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="size-4" />
-                  {new Date(selectedMessage.sentAt).toLocaleString()}
-                </span>
-                {getStatusBadge(selectedMessage.status)}
+          {viewing && (
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  From <span className="font-medium text-foreground">{viewing.senderName}</span> ({viewing.senderEmail})
+                </p>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="size-4" />
+                    {new Date(viewing.sentAt).toLocaleString('en-US', {
+                      dateStyle: 'short',
+                      timeStyle: 'medium'
+                    })}
+                  </div>
+                  <StatusBadge status={viewing.status} />
+                </div>
               </div>
-              <Separator />
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {selectedMessage.body}
+
+              <div className="text-sm text-foreground whitespace-pre-wrap pt-2">
+                {viewing.body}
               </div>
-              <Separator />
-              <div className="flex items-center gap-2">
+
+              <div className="flex gap-3 pt-6">
+                {/* <Button variant="outline" asChild>
+                  <a href={`mailto:${viewing.senderEmail}`}>
+                    <Mail className="mr-2 size-4" /> Reply via Email
+                  </a>
+                </Button> */}
                 <Button variant="outline" asChild>
-                  <a href={`mailto:${selectedMessage.senderEmail}?subject=Re: ${selectedMessage.subject}`}>
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${viewing.senderEmail}&su=${encodeURIComponent(
+                      `Re: ${viewing.subject ?? ""}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Mail className="mr-2 size-4" />
                     Reply via Email
                   </a>
                 </Button>
-                <Button variant="outline" onClick={() => handleArchive(selectedMessage)}>
-                  <Archive className="mr-2 size-4" />
-                  Archive
-                </Button>
+
+                {viewing.status !== 'Archived' ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => archiveMut.mutate(viewing.id)}
+                  >
+                    <Archive className="mr-2 size-4" /> Archive
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => unarchiveMut.mutate(viewing.id)}
+                  >
+                    <ArchiveRestore className="mr-2 size-4" /> Unarchive
+                  </Button>
+                )}
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this message from {selectedMessage?.senderName}.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
+

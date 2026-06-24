@@ -4,7 +4,8 @@
 import Link from 'next/link'
 import {
   FileText, FolderKanban, Eye, TrendingUp,
-  Clock, Star, Briefcase, ArrowRight,
+  Clock, Star, Briefcase, ArrowRight, Mail,
+  MailOpen
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { adminService } from '@/services/adminService'
@@ -22,8 +23,8 @@ export default function AdminDashboard() {
       label: 'Blog Posts',
       icon: FileText,
       value: data ? data.totalPublishedPosts + data.draftPosts : 0,
-      sub:   data ? `${data.totalPublishedPosts} published · ${data.draftPosts} drafts` : '',
-      href:  '/admin/blogs',
+      sub: data ? `${data.totalPublishedPosts} published · ${data.draftPosts} drafts` : '',
+      href: '/admin/blogs',
     },
     {
       label: 'Projects',
@@ -31,22 +32,24 @@ export default function AdminDashboard() {
       value: data?.totalProjects ?? 0,
       sub: "showcase projects",
       //sub:   data ? `${data.draftProjects} drafts` : '',
-      href:  '/admin/projects',
+      href: '/admin/projects',
     },
-    // {
-    //   label: 'Skills',
-    //   icon: Star,
-    //   value: data?.totalSkills ?? 0,
-    //   sub:   'Technical & soft skills',
-    //   href:  '/admin/skills',
-    // },
-    // {
-    //   label: 'Experiences',
-    //   icon: Briefcase,
-    //   value: data?.totalExperiences ?? 0,
-    //   sub:   'Work history',
-    //   href:  '/admin/experiences',
-    // },
+    {
+      label: 'Total Views',
+      icon: Eye,
+      value: data?.totalViews ?? 0,
+      sub: "all blog posts",
+      href: '/admin/blogs',
+    },
+    {
+      label: 'Unread Messages',
+      icon: Mail,
+      value: data?.totalUnreadMessages ?? 0,
+      sub: "Awaiting your reply",
+      href: '/admin/messages',
+      highlight: (data?.totalUnreadMessages ?? 0) > 0,
+    }
+
   ]
 
   return (
@@ -86,19 +89,22 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Top Viewed + Recent Posts */}
+      {/* Recent Posts + Recent Messages */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top Viewed */}
+        {/* Recent Blog Posts */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Top Viewed Posts</CardTitle>
-                <CardDescription>Most popular articles</CardDescription>
+                <CardTitle>Recent Posts</CardTitle>
+                <CardDescription>Latest updated blog posts</CardDescription>
               </div>
-              {/* <Link href="/admin/blogs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <Link href="/admin/blogs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                 View all <ArrowRight size={14} />
-              </Link> */}
+              </Link>
+              {/* <Link href="/admin/blogs/new" className="text-sm text-accent hover:underline flex items-center gap-1">
+              + New post
+            </Link> */}
             </div>
           </CardHeader>
           <CardContent>
@@ -110,7 +116,7 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {data?.topViewedPosts.map((post) => (
+                {data?.recentPosts.map((post) => (
                   <div key={post.id} className="flex items-center justify-between gap-2">
                     <Link
                       href={`/admin/blogs/${post.id}`}
@@ -119,8 +125,8 @@ export default function AdminDashboard() {
                       {post.title}
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Eye size={12} /> {post.viewCount}
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(post.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                       <Badge variant={post.status === 'Published' ? 'default' : 'secondary'} className="text-xs">
                         {post.status}
@@ -133,15 +139,15 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Projects */}
+        {/* recent messages */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Projects</CardTitle>
-                <CardDescription>Latest updated projects</CardDescription>
+                <CardTitle>Recent Messages</CardTitle>
+                <CardDescription>Latest contact form submissions</CardDescription>
               </div>
-              <Link href="/admin/projects" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <Link href="/admin/messages" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                 View all <ArrowRight size={14} />
               </Link>
             </div>
@@ -149,31 +155,38 @@ export default function AdminDashboard() {
           <CardContent>
             {isLoading ? (
               <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <div key={i} className="h-8 bg-secondary rounded animate-pulse" />
                 ))}
               </div>
+            ) : data?.recentMessages.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No messages yet.</p>
             ) : (
               <div className="space-y-3">
-                {data?.recentProjects.map((proj) => (
-                  <div key={proj.id} className="flex items-center justify-between gap-2">
-                    <Link
-                      href={`/admin/projects/${proj.id}`}
-                      className="text-sm font-medium hover:underline line-clamp-1 flex-1"
-                    >
-                      {proj.title}
-                    </Link>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {proj.isFeatured && (
-                        <TrendingUp size={12} className="text-accent" />
-                      )}
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock size={12} />
-                        {new Date(proj.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {data?.recentMessages.map((msg) => (
+                  <Link
+                    key={msg.id}
+                    href="/admin/messages"
+                    className="flex items-center justify-between gap-2 group"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {msg.status === 'Unread'
+                        ? <Mail size={14} className="text-accent shrink-0" />
+                        : <MailOpen size={14} className="text-muted-foreground shrink-0" />
+                      }
+                      <span className={`text-sm line-clamp-1 group-hover:underline ${msg.status === 'Unread' ? 'font-medium' : ''
+                        }`}>
+                        {msg.senderName}
+                        {msg.subject && (
+                          <span className="text-muted-foreground"> — {msg.subject}</span>
+                        )}
                       </span>
-                      <Badge variant="secondary" className="text-xs">{proj.status}</Badge>
                     </div>
-                  </div>
+                    <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
+                      <Clock size={12} />
+                      {new Date(msg.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </Link>
                 ))}
               </div>
             )}
@@ -181,53 +194,6 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Recent Blog Posts */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Posts</CardTitle>
-              <CardDescription>Latest updated blog posts</CardDescription>
-            </div>
-             <Link href="/admin/blogs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
-                View all <ArrowRight size={14} />
-              </Link>
-            {/* <Link href="/admin/blogs/new" className="text-sm text-accent hover:underline flex items-center gap-1">
-              + New post
-            </Link> */}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-8 bg-secondary rounded animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {data?.recentPosts.map((post) => (
-                <div key={post.id} className="flex items-center justify-between gap-2">
-                  <Link
-                    href={`/admin/blogs/${post.id}`}
-                    className="text-sm font-medium hover:underline line-clamp-1 flex-1"
-                  >
-                    {post.title}
-                  </Link>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(post.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                    <Badge variant={post.status === 'Published' ? 'default' : 'secondary'} className="text-xs">
-                      {post.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Quick Actions */}
       <Card>
@@ -237,10 +203,10 @@ export default function AdminDashboard() {
         <CardContent>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { href: '/admin/blogs/new',     icon: FileText,    label: 'New Blog Post' },
-              { href: '/admin/projects/new',  icon: FolderKanban, label: 'New Project' },
-              { href: '/admin/media',         icon: Eye,         label: 'Upload Media' },
-              { href: '/admin/profile',       icon: Star,        label: 'Edit Profile' },
+              { href: '/admin/blogs/new', icon: FileText, label: 'New Blog Post' },
+              { href: '/admin/projects/new', icon: FolderKanban, label: 'New Project' },
+              { href: '/admin/media', icon: Eye, label: 'Upload Media' },
+              { href: '/admin/profile', icon: Star, label: 'Edit Profile' },
             ].map((action) => {
               const Icon = action.icon
               return (

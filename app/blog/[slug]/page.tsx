@@ -36,10 +36,15 @@ export default function BlogDetailPage() {
   }, [slug])
 
   // 404
+  useEffect(() => {
   if (isError) {
     router.push('/blog')
-    return null
   }
+}, [isError, router])
+  // if (isError) {
+  //   router.push('/blog')
+  //   return null
+  // }
 
   if (isLoading || !post) {
     return (
@@ -123,13 +128,13 @@ export default function BlogDetailPage() {
         {/* Tags footer */}
         <div className="flex flex-wrap gap-2 mt-6 pt-6 ">
           {post.tags.map((tag) => (
-            <Link
+            <span
               key={tag.id}
-              href={`/blog?tagSlug=${tag.slug}`}
+              // href={`/blog?tagSlug=${tag.slug}`}
               className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors"
             >
               #{tag.name}
-            </Link>
+            </span>
           ))}
         </div>
 

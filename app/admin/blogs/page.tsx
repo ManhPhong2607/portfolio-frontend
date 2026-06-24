@@ -53,10 +53,19 @@ export default function AdminPostsPage() {
       status: status === 'all' ? undefined : status,
     }),
   })
+  
+  const filtered = (data?.items ?? []).filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase())
 
-  const filtered = (data?.items ?? []).filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase())
-  )
+    if (status === 'all') {
+      return matchesSearch && p.status !== 'Archived'
+    } else {
+      return matchesSearch && p.status === status
+    }
+  })
+  // const filtered = (data?.items ?? []).filter(p =>
+  //   p.title.toLowerCase().includes(search.toLowerCase())
+  // )
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-posts'] })
 
@@ -149,12 +158,35 @@ export default function AdminPostsPage() {
                 {/* Title */}
                 <TableCell>
                   <div className="space-y-1">
-                    <Link href={`/admin/blogs/${post.id}`} className="font-medium hover:underline">
-                      {post.title}
-                    </Link>
+                    {post.status === 'Published' ? (
+                      <Link 
+                        href={`/blog/${post.slug}`} 
+                        target="_blank" 
+                        className="font-semibold text-foreground hover:underline block truncate max-w-md transition-colors"
+                      >
+                        {post.title}
+                      </Link>
+                    ) : (
+                      <span 
+                        className={`block truncate max-w-md font-semibold ${
+                          post.status === 'Archived' 
+                            ? 'text-muted-foreground font-medium' 
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {post.title}
+                      </span>
+                    )}
+                    
                     <div className="flex flex-wrap gap-1">
                       {post.tags.slice(0, 3).map(tag => (
-                        <Badge key={tag.id} variant="outline" className="text-xs">{tag.name}</Badge>
+                        <Badge 
+                          key={tag.id} 
+                          variant="outline" 
+                          className={`text-xs ${post.status === 'Archived' ? 'opacity-50' : ''}`}
+                        >
+                          {tag.name}
+                        </Badge>
                       ))}
                     </div>
                   </div>

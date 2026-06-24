@@ -8,6 +8,7 @@ import {
   LayoutDashboard, FileText, FolderKanban, Wrench,
   Briefcase, Tag, Cpu, ImageIcon, User, Settings,
   LogOut, ChevronDown, ExternalLink,
+  MessageSquare,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
@@ -35,6 +36,7 @@ const contentNav = [
   { title: 'Projects',     href: '/admin/projects',     icon: FolderKanban },
   { title: 'Skills',       href: '/admin/skills',       icon: Wrench },
   { title: 'Experiences',  href: '/admin/experiences',  icon: Briefcase },
+  
 ]
 
 const taxonomyNav = [
@@ -44,6 +46,7 @@ const taxonomyNav = [
 
 const systemNav = [
   { title: 'Media Library', href: '/admin/media',    icon: ImageIcon },
+  { title: 'Messages',     href: '/admin/messages',     icon: MessageSquare },
   { title: 'Profile',       href: '/admin/profile',  icon: User },
   { title: 'Settings',      href: '/admin/settings', icon: Settings },
 ]

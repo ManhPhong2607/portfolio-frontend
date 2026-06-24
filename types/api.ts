@@ -180,13 +180,13 @@ export interface DashboardPostDto {
   updatedAt: string
 }
 
-export interface DashboardProjectDto {
-  id: string
-  title: string
-  slug: string
-  status: string
-  isFeatured: boolean
-  updatedAt: string
+export interface DashboardMessageDto {
+  id:          string
+  senderName:  string
+  senderEmail: string
+  subject:     string | null
+  status:      string
+  sentAt:      string
 }
 
 export interface DashboardDto {
@@ -195,9 +195,10 @@ export interface DashboardDto {
   draftPosts: number
   totalProjects: number
   draftProjects: number
-  topViewedPosts: DashboardPostDto[]
+  totalViews: number
+  totalUnreadMessages: number
   recentPosts: DashboardPostDto[]
-  recentProjects: DashboardProjectDto[]
+  recentMessages: DashboardMessageDto[]
 }
 
 // ── Error ─────────────────────────────────────────────────────────────────
@@ -205,4 +206,16 @@ export interface ProblemDetails {
   status: number
   title: string
   detail: string | null
+}
+
+//contact
+export interface ContactMessageDto {
+  id:          string
+  senderName:  string
+  senderEmail: string
+  subject:     string | null
+  body:        string
+  status:      'Unread' | 'Read' | 'Archived'
+  sentAt:      string
+  readAt:      string | null
 }

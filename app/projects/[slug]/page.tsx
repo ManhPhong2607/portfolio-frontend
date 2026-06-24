@@ -11,6 +11,7 @@ import { publicService } from '@/services/publicService'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Footer } from "@/components/portfolio/footer"
+import { useEffect } from 'react'
 const STATUS_LABELS: Record<string, string> = {
   InProgress: 'In Progress',
   Completed:  'Completed',
@@ -34,10 +35,16 @@ export default function ProjectDetailPage() {
     queryFn:  () => publicService.getProjectBySlug(slug),
   })
 
-  if (isError) {
-    router.push('/projects')
-    return null
-  }
+  //404
+   useEffect(() => {
+    if (isError) {
+      router.push('/projects')
+    }
+  }, [isError, router])
+  // if (isError) {
+  //   router.push('/projects')
+  //   return null
+  // }
 
   if (isLoading || !project) {
     return (

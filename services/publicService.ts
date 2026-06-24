@@ -61,7 +61,7 @@ export const publicService = {
 
   incrementView: async (slug: string) => {
     // fire & forget
-    api.post(`/api/blogs/${slug}/view`).catch(() => {})
+    api.post(`/api/blogs/${slug}/view`).catch(() => { })
   },
 
   // Projects
@@ -76,6 +76,15 @@ export const publicService = {
 
   getProjectBySlug: async (slug: string): Promise<ProjectDetailDto> => {
     const { data } = await api.get<ProjectDetailDto>(`/api/projects/${slug}`)
+    return data
+  },
+
+  //contact
+  submitContact: async (payload: {
+    name: string; email: string; subject?: string;
+     message: string; honeypotUrl?: string
+  }) => {
+    const { data } = await api.post('/api/contact', payload)
     return data
   },
 }

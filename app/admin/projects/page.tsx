@@ -62,9 +62,18 @@ export default function AdminProjectsPage() {
   })
 
   // Client-side search filter
-  const filtered = (data?.items ?? []).filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = (data?.items ?? []).filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase());
+
+    if (status === 'all') {
+      return matchesSearch && p.status !== 'Archived';
+    } else {
+      return matchesSearch && p.status === status;
+    }
+  });
+  // const filtered = (data?.items ?? []).filter(p =>
+  //   p.title.toLowerCase().includes(search.toLowerCase())
+  // )
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-projects'] })
 

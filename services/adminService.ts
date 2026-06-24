@@ -8,6 +8,7 @@ import type {
   ProjectStatus,
   PostStatus,
   SkillCategory,
+  ContactMessageDto,
 } from '@/types/api'
 import { isDataView } from 'util/types'
 
@@ -68,14 +69,14 @@ export const adminService = {
     await api.put(`/api/admin/blogs/${id}`, payload)
   },
 
-//   publishPost:   (id: string) => api.patch(`/api/admin/blogs/${id}/publish`),
-//   unpublishPost: (id: string) => api.patch(`/api/admin/blogs/${id}/unpublish`),
-//   archivePost:   (id: string) => api.patch(`/api/admin/blogs/${id}/archive`),
-  
-  changePostStatus: (id: string, status: PostStatus) =>
-  api.patch(`/api/admin/blogs/${id}/status`, { status }),
+  //   publishPost:   (id: string) => api.patch(`/api/admin/blogs/${id}/publish`),
+  //   unpublishPost: (id: string) => api.patch(`/api/admin/blogs/${id}/unpublish`),
+  //   archivePost:   (id: string) => api.patch(`/api/admin/blogs/${id}/archive`),
 
-  deletePost:    (id: string) => api.delete(`/api/admin/blogs/${id}`),
+  changePostStatus: (id: string, status: PostStatus) =>
+    api.patch(`/api/admin/blogs/${id}/status`, { status }),
+
+  deletePost: (id: string) => api.delete(`/api/admin/blogs/${id}`),
 
   // Projects
   getAdminProjects: async (params?: {
@@ -201,4 +202,16 @@ export const adminService = {
   },
   deleteMedia: (id: string, force = false) =>
     api.delete(`/api/admin/media/${id}?force=${force}`),
+
+  //contact
+  getMessages: async (params?: {
+    page?: number; limit?: number; status?: string
+  }): Promise<PaginatedResult<ContactMessageDto>> => {
+    const { data } = await api.get('/api/admin/messages', { params })
+    return data
+  },
+  markMessageRead: (id: string) => api.patch(`/api/admin/messages/${id}/read`),
+  archiveMessage: (id: string) => api.patch(`/api/admin/messages/${id}/archive`),
+  unarchiveMessage: (id: string) => api.patch(`/api/admin/messages/${id}/unarchive`),
+  deleteMessage: (id: string) => api.delete(`/api/admin/messages/${id}`),
 }
