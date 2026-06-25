@@ -11,8 +11,10 @@ export function middleware(request: NextRequest) {
   // Bảo vệ tất cả route /admin/*
   if (pathname.startsWith('/admin')) {
     const token = request.cookies.get('accessToken')?.value
+    const refreshToken = request.cookies.get('refreshToken')?.value
 
-    if (!token) {
+    // chỉ chặn khi mất 2 token
+    if (!token && !refreshToken) {
       const loginUrl = new URL('/admin/login', request.url)
       loginUrl.searchParams.set('from', pathname)
       return NextResponse.redirect(loginUrl)

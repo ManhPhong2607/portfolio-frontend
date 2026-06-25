@@ -63,7 +63,9 @@ api.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
 
-      const refreshToken = localStorage.getItem('refreshToken')
+      const refreshToken =
+        Cookies.get('refreshToken') ||
+        localStorage.getItem('refreshToken')
 
       if (!refreshToken) {
         // Không có refresh token → Xóa sạch cả localStorage lẫn Cookie và về Login
@@ -83,7 +85,8 @@ api.interceptors.response.use(
         localStorage.setItem('refreshToken', data.refreshToken)
 
         //  3. QUAN TRỌNG: Cập nhật Access Token mới vào Cookie cho Middleware đọc
-        Cookies.set('accessToken', data.accessToken, { expires: 7 })
+        Cookies.set('accessToken', data.accessToken, { expires: 15 / 1440, path: '/' }) // 15 phút
+        Cookies.set('refreshToken', data.refreshToken, { expires: 7, path: '/' })
 
         processQueue(null, data.accessToken)
 
@@ -91,10 +94,11 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        
+
         // Refresh thất bại (Refresh Token hết hạn hẳn) ➔ Clear sạch sành sanh
         localStorage.clear()
-        Cookies.remove('accessToken') // 4. Xóa sạch Cookie để tránh treo Middleware
+        Cookies.remove('accessToken', { path: '/' }) // 4. Xóa sạch Cookie để tránh treo Middleware
+        Cookies.remove('refreshToken', { path: '/' })
         window.location.href = '/admin/login'
         return Promise.reject(refreshError)
       } finally {

@@ -1,5 +1,6 @@
 // store/authStore.ts
 import { create } from 'zustand'
+import Cookies from 'js-cookie'
 
 interface AuthState {
   accessToken: string | null
@@ -21,7 +22,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('refreshToken', refreshToken)
 
      // Lưu vào cookie để middleware đọc được
-    document.cookie = `accessToken=${accessToken}; path=/; max-age=${60 * 15}; SameSite=Lax`
+     Cookies.set('accessToken', accessToken, { expires: 15 / 1440, path: '/' })
+    // Refresh token sống 7 ngày
+    Cookies.set('refreshToken', refreshToken, { expires: 7, path: '/' })
+    // document.cookie = `accessToken=${accessToken}; path=/; max-age=${60 * 15}; SameSite=Lax`
     set({ accessToken, isAuthenticated: true })
   },
 
@@ -40,20 +44,33 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.removeItem('refreshToken')
 
       // Xoá cookie
-      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      // document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      Cookies.remove('accessToken', { path: '/' })
+      Cookies.remove('refreshToken', { path: '/' })
       set({ accessToken: null, isAuthenticated: false })
     }
   },
 
   initFromStorage: () => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken')
+      // const token = localStorage.getItem('accessToken')
+      const accessToken = Cookies.get('accessToken')
+      const refreshToken = Cookies.get('refreshToken')
     //    if (token) {
     //   document.cookie = `accessToken=${token}; path=/; max-age=${60 * 15}; SameSite=Lax`
     // }
+
+    // Nếu còn 1 trong 2 thì vẫn tính là auth (để vào trong Axios sẽ tự lo vụ refresh)
+      const isAuth = !!accessToken || !!refreshToken
+      
+      // set({
+      //   accessToken: token,
+      //   isAuthenticated: !!token,
+      //   isLoading: false,
+      // })
       set({
-        accessToken: token,
-        isAuthenticated: !!token,
+        accessToken: accessToken || localStorage.getItem('accessToken'),
+        isAuthenticated: isAuth,
         isLoading: false,
       })
     } else {
