@@ -173,21 +173,12 @@ export default function ProjectDetailPage() {
                   prose-a:text-accent
                   prose-strong:text-foreground
                   prose-code:text-accent
-                  prose-li:text-muted-foreground"
+                  prose-li:text-muted-foreground
+                  whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: project.detailContent }}
               />
             </div>
-          )}
-
-          {/* Bottom CTA */}
-          {/* <div className="mt-12 pt-8 border-t border-border flex items-center justify-between flex-wrap gap-4">
-            <Link
-              href="/projects"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-            >
-              <ArrowLeft size={14} /> All projects
-            </Link>
-          </div> */}
+          )}      
         </motion.div>
       </div>
       </div>

@@ -121,7 +121,8 @@ export default function BlogDetailPage() {
             prose-p:text-muted-foreground
             prose-a:text-accent
             prose-code:text-accent
-            prose-strong:text-foreground"
+            prose-strong:text-foreground
+            whitespace-pre-wrap"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 

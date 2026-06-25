@@ -629,72 +629,7 @@ export default function AdminProfilePage() {
               )}
             </CardContent>
           </Card>
-
-          {/* <Card>
-            <CardHeader>
-              <CardTitle>Resume / CV</CardTitle>
-              <CardDescription>PDF file for visitors to download</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {cvPreview ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary">
-                    <div className="size-10 rounded bg-background flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-muted-foreground">PDF</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{cvPreview.name}</p>
-                      {cvPreview.size && (
-                        <p className="text-xs text-muted-foreground">{cvPreview.size}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setCvPickerOpen(true)}
-                    >
-                      Replace
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={handleRemoveCv}
-                    >
-                      <X size={14} />
-                    </Button>
-                  </div>
-
-                  {pendingCvId !== undefined && (
-                    <p className="text-xs text-accent">
-                      ✓ Click &quot;Save Changes&quot; to apply
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full h-24 flex-col gap-2"
-                    onClick={() => setCvPickerOpen(true)}
-                  >
-                    <ImageIcon size={28} className="text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Upload CV (PDF)</span>
-                  </Button>
-                  {pendingCvId !== undefined && (
-                    <p className="text-xs text-accent">
-                      ✓ Click &quot;Save Changes&quot; to apply
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card> */}
-
+        
           {/* Preview */}
           <Card>
             <CardHeader>
