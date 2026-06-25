@@ -186,10 +186,10 @@ function LoginContent() {
   // ✅ Nếu đã auth → redirect
   useEffect(() => {
     if (isAuthenticated) {
-     // router.replace(from)
-     window.location.href = from
+     router.replace(from)
+    //  window.location.href = from
     }
-  }, [isAuthenticated, from])
+  }, [isAuthenticated, from, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -200,8 +200,8 @@ function LoginContent() {
       const result = await authService.login(form.email, form.password)
       setTokens(result.accessToken, result.refreshToken)
       toast.success('Đăng nhập thành công!')
-      // router.replace(from)
-      window.location.href = from
+      router.replace(from)
+      // window.location.href = from
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })
         ?.response?.data?.detail ?? 'Email hoặc mật khẩu không đúng.'

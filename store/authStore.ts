@@ -44,7 +44,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.removeItem('refreshToken')
 
       // Xoá cookie
-      // document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       Cookies.remove('accessToken', { path: '/' })
       Cookies.remove('refreshToken', { path: '/' })
       set({ accessToken: null, isAuthenticated: false })
@@ -53,21 +52,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initFromStorage: () => {
     if (typeof window !== 'undefined') {
-      // const token = localStorage.getItem('accessToken')
+    
       const accessToken = Cookies.get('accessToken')
       const refreshToken = Cookies.get('refreshToken')
-    //    if (token) {
-    //   document.cookie = `accessToken=${token}; path=/; max-age=${60 * 15}; SameSite=Lax`
-    // }
-
+   
     // Nếu còn 1 trong 2 thì vẫn tính là auth (để vào trong Axios sẽ tự lo vụ refresh)
       const isAuth = !!accessToken || !!refreshToken
-      
-      // set({
-      //   accessToken: token,
-      //   isAuthenticated: !!token,
-      //   isLoading: false,
-      // })
+
       set({
         accessToken: accessToken || localStorage.getItem('accessToken'),
         isAuthenticated: isAuth,
